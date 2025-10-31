@@ -33,16 +33,36 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable FlashDocusaurus extension features"
+                },
+                "flashDocusaurus.preview.port": {
+                    "type": "number",
+                    "default": 3000,
+                    "description": "Port of the running Docusaurus dev server"
                 }
             }
         },
         "commands": [
             {
-                "command": "flashDocusaurus.helloWorld",
-                "title": "Hello World",
+                "command": "flashDocusaurus.preview.open",
+                "title": "Open Preview",
+                "category": "FlashDocusaurus",
+                "icon": "$(globe)"
+            },
+            {
+                "command": "flashDocusaurus.preview.setPort",
+                "title": "Set Preview Port",
                 "category": "FlashDocusaurus"
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "flashDocusaurus.preview.open",
+                    "when": "flashDocusaurus.isDocusaurusProject && (resourceLangId == markdown || resourceLangId == mdx)",
+                    "group": "navigation@99"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

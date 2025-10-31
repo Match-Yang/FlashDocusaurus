@@ -7,6 +7,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { PreviewPanel } from './webview/PreviewPanel';
 
 /**
  * Check if the workspace root contains a docusaurus.config.js or docusaurus.config.ts file
@@ -73,12 +74,48 @@ export async function activate(context: vscode.ExtensionContext) {
 
   console.log('FlashDocusaurus: Docusaurus config found, activating extension features');
 
-  // Register a simple Hello World command
-  const helloWorldCommand = vscode.commands.registerCommand('flashDocusaurus.helloWorld', async () => {
-    vscode.window.showInformationMessage('Hello from FlashDocusaurus! Docusaurus project detected.');
+  // Register preview command
+  const openPreviewCommand = vscode.commands.registerCommand('flashDocusaurus.preview.open', async () => {
+    // Get configured port
+    const cfg = vscode.workspace.getConfiguration('flashDocusaurus');
+    const configuredPort = cfg.get<number>('preview.port', 3000);
+
+    PreviewPanel.createOrShow(context.extensionUri, configuredPort);
   });
 
-  context.subscriptions.push(helloWorldCommand);
+  // Register set preview port command
+  const setPreviewPortCommand = vscode.commands.registerCommand('flashDocusaurus.preview.setPort', async () => {
+    const cfg = vscode.workspace.getConfiguration('flashDocusaurus');
+    const currentPort = cfg.get<number>('preview.port', 3000);
+
+    const input = await vscode.window.showInputBox({
+      prompt: 'Enter the preview server port',
+      value: currentPort.toString(),
+      validateInput: (value) => {
+        const port = parseInt(value);
+        if (isNaN(port) || port < 1 || port > 65535) {
+          return 'Please enter a valid port number (1-65535)';
+        }
+        return null;
+      }
+    });
+
+    if (input) {
+      const newPort = parseInt(input);
+      await cfg.update('preview.port', newPort, vscode.ConfigurationTarget.Workspace);
+      vscode.window.showInformationMessage(`Preview port set to ${newPort}`);
+
+      // Update existing preview panel if open
+      if (PreviewPanel.currentPanel) {
+        PreviewPanel.currentPanel.updatePort(newPort);
+      }
+    }
+  });
+
+  context.subscriptions.push(
+    openPreviewCommand,
+    setPreviewPortCommand
+  );
 }
 
 export function deactivate() {
