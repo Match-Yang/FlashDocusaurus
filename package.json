@@ -20,6 +20,8 @@
         "markdown",
         "documentation"
     ],
+    "pricing": "Free",
+    "icon": "logo.png",
     "activationEvents": [
         "onLanguage:markdown",
         "onLanguage:mdx"
