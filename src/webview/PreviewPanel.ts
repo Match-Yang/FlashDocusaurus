@@ -7,18 +7,20 @@ export class PreviewPanel {
   public static currentPanel: PreviewPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _currentPort: number;
+  private _currentPath: string;
 
-  public static createOrShow(extensionUri: vscode.Uri, port: number) {
+  public static createOrShow(extensionUri: vscode.Uri, port: number, urlPath: string = '/') {
     if (PreviewPanel.currentPanel) {
-      PreviewPanel.currentPanel.updatePort(port);
+      PreviewPanel.currentPanel.updateUrl(port, urlPath);
       PreviewPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
       return;
     }
-    PreviewPanel.currentPanel = new PreviewPanel(extensionUri, port);
+    PreviewPanel.currentPanel = new PreviewPanel(extensionUri, port, urlPath);
   }
 
-  private constructor(extensionUri: vscode.Uri, port: number) {
+  private constructor(extensionUri: vscode.Uri, port: number, urlPath: string = '/') {
     this._currentPort = port;
+    this._currentPath = urlPath;
     this._panel = vscode.window.createWebviewPanel(
       'flashDocusaurusPreview',
       'Docusaurus Preview',
@@ -26,7 +28,7 @@ export class PreviewPanel {
       { enableScripts: true, retainContextWhenHidden: true }
     );
     this._panel.onDidDispose(() => this.dispose());
-    this.updatePort(port);
+    this.updateUrl(port, urlPath);
   }
 
   public dispose() {
@@ -34,14 +36,24 @@ export class PreviewPanel {
     this._panel.dispose();
   }
 
+  public getViewColumn(): vscode.ViewColumn | undefined {
+    return this._panel.viewColumn;
+  }
+
   public updatePort(port: number) {
     this._currentPort = port;
     this._panel.webview.html = this.getHtml();
   }
 
+  public updateUrl(port: number, urlPath: string) {
+    this._currentPort = port;
+    this._currentPath = urlPath;
+    this._panel.webview.html = this.getHtml();
+  }
+
   private getHtml(): string {
     const nonce = Date.now().toString();
-    const url = `http://localhost:${this._currentPort}/`;
+    const url = `http://localhost:${this._currentPort}${this._currentPath}`;
     return `<!DOCTYPE html>
 <html>
 <head>
