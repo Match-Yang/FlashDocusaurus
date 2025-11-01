@@ -8,6 +8,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { registerCommands, setupEditorChangeListener } from './functions/commands';
+import { createCompletionProviders } from './functions/Completion';
+import { createPlaceholderProvider } from './functions/PlaceholderProvider';
 
 /**
  * Check if the workspace root contains a docusaurus.config.js or docusaurus.config.ts file
@@ -82,6 +84,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Setup editor change listener
   setupEditorChangeListener(context);
+
+  // Register completion providers
+  const completionProviders = createCompletionProviders();
+  completionProviders.forEach(provider => context.subscriptions.push(provider));
+
+  // Register placeholder provider
+  context.subscriptions.push(createPlaceholderProvider());
 }
 
 export function deactivate() {
