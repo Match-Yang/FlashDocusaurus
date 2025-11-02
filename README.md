@@ -4,14 +4,22 @@
 
 A VS Code extension that supercharges your Docusaurus writing workflow. It brings intelligent slash commands, correct component imports, auto‑detected code highlighting comments, and productivity upgrades for MD/MDX.
 
-🌟 Like this tool? Your star is my biggest motivation to keep improving!  
-👉 [Click here to give FlashDocusaurus a star!](https://github.com/Match-Yang/FlashDocusaurus)  
+🌟 Like this tool? Your star is my biggest motivation to keep improving!
+👉 [Click here to give FlashDocusaurus a star!](https://github.com/Match-Yang/FlashDocusaurus)
 Let more people discover and use the more efficient Docusaurus writing experience!
 
 
 ## ✨ Key Features
 
 ### Preview in editor
+
+See Docusaurus pages rendered live inside VS Code with a side-by-side preview. No browser switching required.
+
+- Real-time, side-by-side preview of the rendered page
+- Defaults to port 3000; configurable to other ports
+- Preview automatically follows when switching between MD/MDX files
+
+- Supports cross-version preview for versioned docs
 
 ![preview_in_editor](https://raw.githubusercontent.com/Match-Yang/FlashDocusaurus/main/images/preview_in_editor.gif)
 
@@ -21,18 +29,36 @@ Just type "/" to trigger the slash commands and get the following features:
 
 ![slash_commands](https://raw.githubusercontent.com/Match-Yang/FlashDocusaurus/main/images/slash_command.gif)
 
+- Quickly launch actions, insert components and content snippets
+- Automatically adds the correct MDX import statements when inserting components
+- Organized by categories (AI, Basic, Components, Admonitions, Diagrams, Utilities) for quick scanning
 
-### 🖼️ [Coming soon] Visual Page Options Editor
+
+### 🖼️ Visual Page Options Editor
+
+Edit page frontmatter visually with zero YAML memorization.
+
+- Fields are organized by logical groups (Identity & URL, Sidebar, TOC & Visibility, Pagination, Editing & Source, Drafting, Advanced)
+- Supports all default Docusaurus frontmatter options (docs/blog/pages)
+- Open the panel, adjust options, and save — FlashDocusaurus writes the frontmatter for you
+
+![frontmatter_visual_editor](https://raw.githubusercontent.com/Match-Yang/FlashDocusaurus/main/images/set_frontmatter.gif)
 
 
 
 ### 🧩 [Coming soon] Visual Component Property Editor
 
+Coming soon: configure MDX components via a visual editor.
+
+- Support for all default Docusaurus components
+- Set component props visually — no need to remember complex properties
+- Automatically handles required imports and updates MDX markup
+
 
 ### 🔗 [Coming soon] Smart Link Management & Validation
 Real-time link validation and automatic updates:
 
-- **Internal Link Validation**: Validates Mintlify internal links (`/path/to/page`)
+- **Internal Link Validation**: Validates Docusaurus internal links (`/path/to/page`)
 - **Absolute Link Validation**: Checks file existence for absolute paths (`/images/logo.png`)
 - **CodeLens Integration**: Shows "Open file" buttons for valid internal links
 - **Status Bar Indicators**: Real-time count of invalid links in current file

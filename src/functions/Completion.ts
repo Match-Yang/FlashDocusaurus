@@ -133,6 +133,12 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
         description: 'Generate content with AI',
         command: 'flashDocusaurus.writeWithAI'
       },
+      {
+        label: '⚙️ Set Page Options',
+        detail: 'Edit frontmatter visually',
+        description: 'Open Page Options editor for docs/blog/pages',
+        command: 'flashDocusaurus.basic.frontmatter'
+      },
 
       {
         label: '🧩 Tabs',
@@ -246,12 +252,102 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
       }
     ];
 
+    componentCommands; // retain for backward compatibility
+
+
+	    // Categorized commands
+	    const aiCommands = [
+	      {
+	        label: '✨ Write with AI',
+	        detail: 'Let AI help you write (coming soon)',
+	        description: 'Generate content with AI',
+	        command: 'flashDocusaurus.writeWithAI'
+	      }
+	    ];
+
+	    const basicCommands = [
+	      {
+	        label: '⚙️ Set Page Options',
+	        detail: 'Edit frontmatter visually',
+	        description: 'Open Page Options editor for docs/blog/pages',
+	        command: 'flashDocusaurus.basic.frontmatter'
+	      }
+,
+		      {
+		        label: '📊 Insert Table',
+		        detail: 'Insert Markdown table',
+		        description: 'Insert a Markdown table scaffold',
+		        insertText: '| ${1:Column 1} | ${2:Column 2} |\n| --- | --- |\n| ${3:Cell 1} | ${4:Cell 2} |',
+		        kind: vscode.CompletionItemKind.Snippet
+		      }
+	    ];
+
+	    const docusaurusComponentCommands = [
+	      {
+	        label: '🧩 Tabs',
+	        detail: 'Insert tabs component',
+	        description: 'Toggle content using tabs',
+	        insertText: this.createTabsSnippet(),
+	        kind: vscode.CompletionItemKind.Snippet,
+	        needsImport: true,
+	        imports: [
+	          { source: '@theme/Tabs', default: 'Tabs' },
+	          { source: '@theme/TabItem', default: 'TabItem' }
+	        ]
+	      },
+	      {
+	        label: '🧩 TabItem',
+	        detail: 'Insert tab item',
+	        description: 'Single tab item (use inside Tabs)',
+	        insertText: '<TabItem value="${1:tab}" label="${2:Tab Label}"${3: default}>\n  ${4:Content}\n</TabItem>',
+	        kind: vscode.CompletionItemKind.Snippet,
+	        needsImport: true,
+	        imports: [ { source: '@theme/TabItem', default: 'TabItem' } ]
+	      },
+	      {
+	        label: '📑 TOC Inline',
+	        detail: 'Insert inline table of contents',
+	        description: 'Display inline TOC',
+	        insertText: '<TOCInline toc={toc} minHeadingLevel={${1:2}} maxHeadingLevel={${2:3}} />',
+	        kind: vscode.CompletionItemKind.Snippet,
+	        needsImport: true,
+	        imports: [{ source: '@theme/TOCInline', default: 'TOCInline' }]
+	      }
+	    ];
+
+	    const admonitionCommands = [
+	      { label: '📝 Admonition - Note', detail: 'Insert note admonition', description: 'Add a note callout', command: 'flashDocusaurus.insertAdmonition', admonitionType: 'note' },
+	      { label: '📝 Admonition - Tip', detail: 'Insert tip admonition', description: 'Add a tip callout', command: 'flashDocusaurus.insertAdmonition', admonitionType: 'tip' },
+	      { label: '📝 Admonition - Info', detail: 'Insert info admonition', description: 'Add an info callout', command: 'flashDocusaurus.insertAdmonition', admonitionType: 'info' },
+	      { label: '📝 Admonition - Warning', detail: 'Insert warning admonition', description: 'Add a warning callout', command: 'flashDocusaurus.insertAdmonition', admonitionType: 'warning' },
+	      { label: '📝 Admonition - Danger', detail: 'Insert danger admonition', description: 'Add a danger callout', command: 'flashDocusaurus.insertAdmonition', admonitionType: 'danger' }
+	    ];
+
+	    const diagramCommands = [
+	      { label: '📊 Mermaid - Flowchart', detail: 'Insert Mermaid flowchart', description: 'Create flowchart diagram', insertText: this.createMermaidSnippet('flowchart'), kind: vscode.CompletionItemKind.Snippet },
+	      { label: '📊 Mermaid - Sequence', detail: 'Insert Mermaid sequence diagram', description: 'Create sequence diagram', insertText: this.createMermaidSnippet('sequence'), kind: vscode.CompletionItemKind.Snippet },
+	      { label: '📊 Mermaid - Class', detail: 'Insert Mermaid class diagram', description: 'Create class diagram', insertText: this.createMermaidSnippet('class'), kind: vscode.CompletionItemKind.Snippet },
+	      { label: '📊 Mermaid - State', detail: 'Insert Mermaid state diagram', description: 'Create state diagram', insertText: this.createMermaidSnippet('state'), kind: vscode.CompletionItemKind.Snippet },
+	      { label: '📊 Mermaid - ER Diagram', detail: 'Insert Mermaid ER diagram', description: 'Create entity relationship diagram', insertText: this.createMermaidSnippet('er'), kind: vscode.CompletionItemKind.Snippet }
+	    ];
+
+	    const utilityCommands = [
+	      { label: '💡 Code Highlight', detail: 'Highlight code lines', description: 'Add line highlighting to code', command: 'flashDocusaurus.insertCodeHighlight', insertText: '' }
+	    ];
+
     // Create category items
     const createCategoryItems = (commands: any[], categoryPrefix: string, categoryName: string) => {
       const items: vscode.CompletionItem[] = [];
 
-      // Add command items
+      // Category separator (non-insertable)
+      const separator = new vscode.CompletionItem(`────────── ${categoryName} ──────────`, vscode.CompletionItemKind.Text);
+      separator.detail = '';
+      separator.documentation = new vscode.MarkdownString(`**${categoryName}**`);
+      separator.insertText = '';
+      separator.sortText = `${categoryPrefix}000`;
+      items.push(separator);
 
+      // Add command items
       commands.forEach((cmd, index) => {
         const item = new vscode.CompletionItem(cmd.label, cmd.kind || vscode.CompletionItemKind.Function);
         item.detail = cmd.detail;
@@ -260,18 +356,10 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
         if ('command' in cmd && cmd.command) {
           // Use command for special handling
           item.insertText = '';
-          const args = cmd.admonitionType
-            ? [position, cmd.admonitionType]
-            : [position, cmd];
-          item.command = {
-
-            command: cmd.command,
-            title: cmd.label,
-            arguments: args
-          };
+          const args = cmd.admonitionType ? [position, cmd.admonitionType] : [position, cmd];
+          item.command = { command: cmd.command, title: cmd.label, arguments: args };
         } else if (cmd.needsImport && cmd.imports) {
           // Handle imports for components that need them
-          // Don't set insertText here to avoid double insertion
           item.insertText = '';
           item.command = {
             command: 'flashDocusaurus.insertWithImports',
@@ -285,18 +373,14 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
           } else {
             item.insertText = cmd.insertText;
           }
-
           // Remove triggering slash for regular snippets
           item.additionalTextEdits = [
-            vscode.TextEdit.delete(
-              new vscode.Range(position.line, position.character - 1, position.line, position.character)
-            )
+            vscode.TextEdit.delete(new vscode.Range(position.line, position.character - 1, position.line, position.character))
           ];
         }
 
         const paddedIndex = String(index + 1).padStart(3, '0');
         item.sortText = `${categoryPrefix}${paddedIndex}`;
-
         items.push(item);
       });
 
@@ -306,8 +390,21 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
 
 
 
-    const componentItems = createCategoryItems(componentCommands, '1', 'Docusaurus Components');
-    completionItems.push(...componentItems);
+    const aiItems = createCategoryItems(aiCommands, '1', 'AI');
+    const basicItems = createCategoryItems(basicCommands, '2', 'Basic');
+    const compItems = createCategoryItems(docusaurusComponentCommands, '3', 'Components');
+    const admonItems = createCategoryItems(admonitionCommands, '4', 'Admonitions');
+    const diagItems = createCategoryItems(diagramCommands, '5', 'Diagrams');
+    const utilItems = createCategoryItems(utilityCommands, '6', 'Utilities');
+
+    completionItems.push(
+      ...aiItems,
+      ...basicItems,
+      ...compItems,
+      ...admonItems,
+      ...diagItems,
+      ...utilItems
+    );
 
     return completionItems;
   }

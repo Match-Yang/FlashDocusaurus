@@ -2,10 +2,14 @@
     "name": "flash-docusaurus",
     "displayName": "FlashDocusaurus",
     "description": "A VS Code extension for Docusaurus documentation development with intelligent features.",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "publisher": "FlashDocs",
     "private": true,
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Match-Yang/FlashDocusaurus"
+    },
     "engines": {
         "vscode": "^1.73.0"
     },
@@ -54,6 +58,12 @@
                 "command": "flashDocusaurus.preview.setPort",
                 "title": "Set Preview Port",
                 "category": "FlashDocusaurus"
+            },
+            {
+                "command": "flashDocusaurus.basic.frontmatter",
+                "title": "Set Page Options (Frontmatter)",
+                "category": "FlashDocusaurus",
+                "icon": "$(settings)"
             }
         ],
         "menus": {
@@ -62,6 +72,11 @@
                     "command": "flashDocusaurus.preview.open",
                     "when": "flashDocusaurus.isDocusaurusProject && (resourceLangId == markdown || resourceLangId == mdx)",
                     "group": "navigation@99"
+                },
+                {
+                    "command": "flashDocusaurus.basic.frontmatter",
+                    "when": "flashDocusaurus.isDocusaurusProject && (resourceLangId == markdown || resourceLangId == mdx)",
+                    "group": "navigation@98"
                 }
             ]
         }
