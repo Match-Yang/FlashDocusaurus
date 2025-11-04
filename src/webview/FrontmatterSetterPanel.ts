@@ -3,6 +3,8 @@ import { SettingsData, SettingsField, SettingsPanel } from './SettingsPanel';
 import { ContentType, ExistingValues, getFieldsForContentType, groupFields } from './DocusaurusFrontmatterFieldGroups';
 import * as path from 'path';
 
+import { Analytics } from '../utils/analytics';
+
 export class FrontmatterSetterPanel extends SettingsPanel {
   public static currentPanel: FrontmatterSetterPanel | undefined;
   private _frontmatterRange: vscode.Range | undefined;
@@ -201,6 +203,18 @@ export class FrontmatterSetterPanel extends SettingsPanel {
 
     const newText = this.applyFrontmatterUpdate(text, data);
 
+    // Diff frontmatter (old vs new) to determine actually changed keys that exist in the final frontmatter
+    const oldFmMatch = text.match(/^---\s*\n([\s\S]*?)\n---/);
+    const newFmMatch = newText.match(/^---\s*\n([\s\S]*?)\n---/);
+    const oldMap = oldFmMatch ? this.parseFrontmatterLines(oldFmMatch[1]) : {};
+    const newMap = newFmMatch ? this.parseFrontmatterLines(newFmMatch[1]) : {};
+    const changedKeys: string[] = [];
+    for (const k of Object.keys(newMap)) {
+      if (!Object.prototype.hasOwnProperty.call(oldMap, k) || newMap[k] !== oldMap[k]) {
+        changedKeys.push(k);
+      }
+    }
+
     const wsEdit = new vscode.WorkspaceEdit();
     wsEdit.replace(doc.uri, fullRange, newText);
     const applied = await vscode.workspace.applyEdit(wsEdit);
@@ -208,6 +222,11 @@ export class FrontmatterSetterPanel extends SettingsPanel {
       vscode.window.showErrorMessage('Failed to apply frontmatter edits.');
       return;
     }
+    // Only track keys that actually changed and are present in the resulting frontmatter
+    if (changedKeys.length > 0) {
+      try { changedKeys.forEach(k => Analytics.track(`set.page.option.${k}`)); } catch {}
+    }
+
     await doc.save();
     vscode.window.showInformationMessage('Frontmatter saved.');
   }

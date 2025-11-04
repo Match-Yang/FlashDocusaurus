@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { PreviewPanel } from '../webview/PreviewPanel';
+import { Analytics } from '../utils/analytics';
 import { getDocusaurusUrlPath } from '../utils/urlMapper';
 
 /**
@@ -10,6 +11,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   const openPreviewCommand = vscode.commands.registerCommand(
     'flashDocusaurus.preview.open',
     async () => {
+      Analytics.track('command.preview.open');
       await handleOpenPreview(context);
     }
   );
@@ -18,6 +20,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   const setPortCommand = vscode.commands.registerCommand(
     'flashDocusaurus.preview.setPort',
     async () => {
+      Analytics.track('command.preview.setPort');
       await handleSetPort();
     }
   );

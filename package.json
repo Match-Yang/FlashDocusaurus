@@ -2,7 +2,7 @@
     "name": "flash-docusaurus",
     "displayName": "FlashDocusaurus",
     "description": "A VS Code extension for Docusaurus documentation development with intelligent features.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "FlashDocs",
     "private": true,
     "license": "MIT",
@@ -85,7 +85,9 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "lint": "eslint \"src/**/*.ts\""
+        "lint": "eslint \"src/**/*.ts\"",
+        "package": "npm run compile && vsce package",
+        "publish": "npm run compile && vsce publish"
     },
     "devDependencies": {
         "@types/node": "^16.18.34",

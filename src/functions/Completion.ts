@@ -4,6 +4,15 @@
 import * as vscode from 'vscode';
 import { ImportManager, ImportInfo } from '../utils/ImportManager';
 import { getStyleForLanguage as getStyleForLanguageUtil } from '../utils/CommentStyles';
+import { Analytics } from '../utils/analytics';
+
+
+function labelToFeature(label: string): string {
+  const norm = label.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '');
+  return `slash.${norm}`;
+}
+
+
 
 
 // Comment styles for different languages (used for QuickPick fallback)
@@ -364,19 +373,16 @@ class SlashCommandCompletionItemProvider implements vscode.CompletionItemProvide
           item.command = {
             command: 'flashDocusaurus.insertWithImports',
             title: 'Insert with imports',
-            arguments: [position, cmd.insertText, cmd.imports]
+            arguments: [position, cmd.insertText, cmd.imports, labelToFeature(cmd.label)]
           };
         } else {
-          // Regular snippet without imports
-          if (typeof cmd.insertText === 'string' && cmd.insertText.includes('$')) {
-            item.insertText = new vscode.SnippetString(cmd.insertText);
-          } else {
-            item.insertText = cmd.insertText;
-          }
-          // Remove triggering slash for regular snippets
-          item.additionalTextEdits = [
-            vscode.TextEdit.delete(new vscode.Range(position.line, position.character - 1, position.line, position.character))
-          ];
+          // Regular snippet without imports -> use command to also track feature
+          item.insertText = '' as any;
+          item.command = {
+            command: 'flashDocusaurus.insertSnippetAndTrack',
+            title: 'Insert snippet',
+            arguments: [position, cmd.insertText, labelToFeature(cmd.label)]
+          };
         }
 
         const paddedIndex = String(index + 1).padStart(3, '0');
@@ -551,6 +557,8 @@ async function insertAdmonition(
   // Insert new child admonition at base 3-colon level
   const snippet = `:::${admonitionType}[\${1:Title}]\n\${2:Content goes here}\n:::`;
   await editor.insertSnippet(new vscode.SnippetString(snippet), caret);
+
+  Analytics.track(`slash.admonition.${admonitionType}`);
 }
 
 // Helper function to find parent admonitions
@@ -636,7 +644,8 @@ function findParentAdmonitions(document: vscode.TextDocument, position: vscode.P
 async function insertWithImports(
   position: vscode.Position,
   insertText: string,
-  imports: ImportInfo[]
+  imports: ImportInfo[],
+  featureName?: string
 ): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -666,6 +675,44 @@ async function insertWithImports(
 
   // 3) Insert snippet at the updated caret position
   await editor.insertSnippet(new vscode.SnippetString(insertText), caret);
+
+  // 4) Track feature if provided
+  if (featureName) {
+    Analytics.track(featureName);
+  }
+}
+
+// Command to insert a plain snippet and track a feature
+async function insertSnippetAndTrack(
+  position: vscode.Position,
+  insertText: string,
+  featureName: string
+): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+  const document = editor.document;
+
+  // Remove triggering slash
+  let caret = editor.selection.active;
+  const lineText = document.lineAt(caret.line).text;
+  let deleteRange: vscode.Range | null = null;
+  if (caret.character > 0 && lineText[caret.character - 1] === '/') {
+    deleteRange = new vscode.Range(caret.line, caret.character - 1, caret.line, caret.character);
+    caret = new vscode.Position(caret.line, caret.character - 1);
+  } else if (caret.character < lineText.length && lineText[caret.character] === '/') {
+    deleteRange = new vscode.Range(caret.line, caret.character, caret.line, caret.character + 1);
+  }
+  if (deleteRange) {
+    await editor.edit(b => b.delete(deleteRange));
+  }
+
+  if (typeof insertText === 'string' && insertText.includes('$')) {
+    await editor.insertSnippet(new vscode.SnippetString(insertText), caret);
+  } else {
+    await editor.insertSnippet(new vscode.SnippetString(String(insertText)), caret);
+  }
+
+  Analytics.track(featureName);
 }
 
 // Command: placeholder for Write with AI
@@ -685,6 +732,7 @@ async function writeWithAI(position: vscode.Position): Promise<void> {
   if (deleteRange) {
     await editor.edit(b => b.delete(deleteRange));
   }
+  Analytics.track('slash.write.with.ai');
   vscode.window.showInformationMessage('Coming soon');
 }
 
@@ -764,6 +812,8 @@ async function insertCodeHighlight(
   }
 
   await editor.insertSnippet(new vscode.SnippetString(commentText), caret);
+  const feat = highlightType.value === 'next-line' ? 'slash.code.highlight.nextLine' : 'slash.code.highlight.range';
+  Analytics.track(feat);
 }
 
 // Export function to create completion providers
@@ -798,6 +848,12 @@ export function createCompletionProviders(): vscode.Disposable[] {
     insertAdmonition
   );
 
-  return [slashCommandProvider, writeWithAICommand, codeHighlightCommand, insertWithImportsCommand, insertAdmonitionCommand];
+  // Register command for plain snippet + tracking
+  const insertSnippetAndTrackCommand = vscode.commands.registerCommand(
+    'flashDocusaurus.insertSnippetAndTrack',
+    insertSnippetAndTrack
+  );
+
+  return [slashCommandProvider, writeWithAICommand, codeHighlightCommand, insertWithImportsCommand, insertAdmonitionCommand, insertSnippetAndTrackCommand];
 }
 

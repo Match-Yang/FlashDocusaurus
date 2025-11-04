@@ -11,6 +11,7 @@ import { registerCommands, setupEditorChangeListener } from './functions/command
 import { createCompletionProviders } from './functions/Completion';
 import { createPlaceholderProvider } from './functions/PlaceholderProvider';
 import { registerFrontmatterCommand } from './functions/Frontmatter';
+import { Analytics } from './utils/analytics';
 
 /**
  * Check if the workspace root contains a docusaurus.config.js or docusaurus.config.ts file
@@ -79,6 +80,9 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   console.log('FlashDocusaurus: Docusaurus config found, activating extension features');
+
+  Analytics.init(context, 'FlashDocusaurus');
+  Analytics.track('activation');
 
   // Register all commands
   registerCommands(context);

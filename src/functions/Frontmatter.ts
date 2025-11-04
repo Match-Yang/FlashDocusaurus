@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FrontmatterSetterPanel } from '../webview/FrontmatterSetterPanel';
+import { Analytics } from '../utils/analytics';
 
 export function registerFrontmatterCommand(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand('flashDocusaurus.basic.frontmatter', async (...args: any[]) => {
@@ -26,6 +27,9 @@ export function registerFrontmatterCommand(context: vscode.ExtensionContext) {
     } catch (e) {
       // ignore deletion failure
     }
+
+    // track feature (fire-and-forget)
+    try { Analytics.track('slash.set.page.options'); } catch {}
 
     FrontmatterSetterPanel.createOrShow(context.extensionUri);
   });
