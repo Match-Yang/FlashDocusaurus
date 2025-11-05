@@ -2,7 +2,7 @@
     "name": "flash-docusaurus",
     "displayName": "FlashDocusaurus",
     "description": "A VS Code extension for Docusaurus documentation development with intelligent features.",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "publisher": "FlashDocs",
     "private": true,
     "license": "MIT",

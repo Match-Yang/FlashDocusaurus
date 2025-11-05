@@ -82,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log('FlashDocusaurus: Docusaurus config found, activating extension features');
 
   Analytics.init(context, 'FlashDocusaurus');
-  Analytics.track('activation');
+  // Analytics.track('activation');
 
   // Register all commands
   registerCommands(context);
